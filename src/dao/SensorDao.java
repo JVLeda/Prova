@@ -33,7 +33,7 @@ public class SensorDao {
                 PreparedStatement statement = conn.prepareStatement(sql);
 
         ){
-            statement.setString(1,sensor.getCodigo());
+            statement.setString(1,codigo);
             PreparedStatement statement1 = conn statement1.executeQuery();
             if(result.next()){
                 Sensor sensor1 = new Sensor();

@@ -8,12 +8,12 @@ import model.Sensor;
 public class MedicaoController {
     private MedicaoDao dao = new MedicaoDao();
 
-    public void cadastrarMedicao(Sensor sensor, String valor, String unidade, String dataHora){
+    public void cadastrarMedicao(Sensor sensor, double valor, String unidade, String dataHora){
         Medicao medicao = new Medicao();
-        sensor.setSensor(sensor);
-        sensor.setValor(valor);
-        sensor.setUnidade(unidade);
-        Sensor.setDataHora(dataHora)
+        medicao.setSensor(sensor);
+        medicao.setValor(valor);
+        medicao.setUnidade(unidade);
+        medicao.setDataHora(dataHora);
         dao.inserirMedicao(medicao);
     }
 
