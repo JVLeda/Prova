@@ -11,7 +11,7 @@ public class SensorController {
     public String cadastrarSensor(String codigo, String tipo, String localizacao){
         Sensor sensorExistente = dao.consultarSensor(codigo);
         if(sensorExistente != null){
-            return "Já existe um sensor cadastrado com este código";
+            return "Já existe um sensor cadastrado com este código.";
         }
 
         Sensor sensor = new Sensor();

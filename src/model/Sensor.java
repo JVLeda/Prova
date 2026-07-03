@@ -47,4 +47,9 @@ public class Sensor {
         this.localizacao = localizacao;
     }
 
+    @Override
+    public String toString() {
+        return codigo;
+    }
+
 }

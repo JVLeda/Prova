@@ -30,7 +30,7 @@ public class MedicaoDao {
 
     public ArrayList<Medicao> consultarMedicao(Sensor sensor){
         ArrayList<Medicao> medicoes = new ArrayList<>();
-        String sql = "select * from medicoes where sensor_id = ?";
+        String sql = "select * from medicoes where sensor_id = ? order by id";
         try(
                 Connection conn = Conexao.getConnection();
                 PreparedStatement statement = conn.prepareStatement(sql)

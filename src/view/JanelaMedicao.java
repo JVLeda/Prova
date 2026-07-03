@@ -6,6 +6,7 @@ import model.Medicao;
 import model.Sensor;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.ArrayList;
 
@@ -25,15 +26,16 @@ public class JanelaMedicao extends JFrame {
     private JLabel labelDataHora;
     private JTextField textoDataHora;
     private JLabel labelSensor;
-    private JComboBox<String> comboSensor;
+    private JComboBox<Sensor> comboSensor;
 
     private JButton botaoSalvar;
     private JButton botaoConsultar;
     private JButton botaoLimpar;
     private JButton botaoAtualizarSensores;
 
-    private JTextArea textoResultado;
-    private JScrollPane scrollResultado;
+    private JTable tabelaMedicoes;
+    private DefaultTableModel modeloTabelaMedicoes;
+    private JScrollPane scrollTabela;
 
     public JanelaMedicao(){
         initComponents();
@@ -59,7 +61,13 @@ public class JanelaMedicao extends JFrame {
         botaoLimpar = new JButton();
         botaoAtualizarSensores = new JButton();
 
-        textoResultado = new JTextArea();
+        modeloTabelaMedicoes = new DefaultTableModel(new Object[]{"ID", "Valor", "Unidade", "Data/Hora", "Sensor"}, 0){
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        tabelaMedicoes = new JTable(modeloTabelaMedicoes);
 
         setTitle("Cadastro de Medição");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -69,13 +77,13 @@ public class JanelaMedicao extends JFrame {
         painelDados.setLayout(null);
         painelDados.setBorder(BorderFactory.createTitledBorder("Dados da Medição"));
         painelDados.setBackground(Color.WHITE);
-        painelDados.setBounds(20, 20, 560, 240);
+        painelDados.setBounds(20, 20, 680, 240);
         add(painelDados);
 
         painelResultado.setLayout(null);
         painelResultado.setBorder(BorderFactory.createTitledBorder("Medições Cadastradas"));
         painelResultado.setBackground(Color.WHITE);
-        painelResultado.setBounds(20, 280, 560, 190);
+        painelResultado.setBounds(20, 280, 680, 210);
         add(painelResultado);
 
         labelId.setText("ID:");
@@ -84,14 +92,14 @@ public class JanelaMedicao extends JFrame {
 
         textoId.setColumns(10);
         textoId.setEditable(false);
-        textoId.setBounds(130, 35, 150, 25);
+        textoId.setBounds(130, 35, 160, 25);
         painelDados.add(textoId);
 
         labelSensor.setText("Sensor:");
-        labelSensor.setBounds(310, 35, 90, 25);
+        labelSensor.setBounds(330, 35, 90, 25);
         painelDados.add(labelSensor);
 
-        comboSensor.setBounds(410, 35, 120, 25);
+        comboSensor.setBounds(430, 35, 200, 25);
         painelDados.add(comboSensor);
 
         labelValor.setText("Valor:");
@@ -99,15 +107,15 @@ public class JanelaMedicao extends JFrame {
         painelDados.add(labelValor);
 
         textoValor.setColumns(20);
-        textoValor.setBounds(130, 85, 150, 25);
+        textoValor.setBounds(130, 85, 160, 25);
         painelDados.add(textoValor);
 
         labelUnidade.setText("Unidade:");
-        labelUnidade.setBounds(310, 85, 90, 25);
+        labelUnidade.setBounds(330, 85, 90, 25);
         painelDados.add(labelUnidade);
 
         textoUnidade.setColumns(20);
-        textoUnidade.setBounds(410, 85, 120, 25);
+        textoUnidade.setBounds(430, 85, 200, 25);
         painelDados.add(textoUnidade);
 
         labelDataHora.setText("Data/Hora:");
@@ -115,45 +123,16 @@ public class JanelaMedicao extends JFrame {
         painelDados.add(labelDataHora);
 
         textoDataHora.setColumns(20);
-        textoDataHora.setBounds(130, 135, 150, 25);
+        textoDataHora.setBounds(130, 135, 160, 25);
         painelDados.add(textoDataHora);
 
         botaoSalvar.setText("Salvar");
-        botaoSalvar.addActionListener(evt -> {
-            try{
-                if(comboSensor.getSelectedItem() == null){
-                    JOptionPane.showMessageDialog(this, "Selecione um sensor válido para a medição");
-                    return;
-                }
-
-                String codigoSensor = comboSensor.getSelectedItem().toString();
-                double valor = Double.parseDouble(textoValor.getText().replace(",", "."));
-                String unidade = textoUnidade.getText();
-                String dataHora = textoDataHora.getText();
-
-                if(unidade.isEmpty() || dataHora.isEmpty()){
-                    JOptionPane.showMessageDialog(this, "Preencha todos os campos.");
-                }else{
-                    String mensagem = controller.cadastrarMedicao(codigoSensor, valor, unidade, dataHora);
-                    JOptionPane.showMessageDialog(this, mensagem);
-                    mostrarMedicoes(codigoSensor);
-                }
-            }catch(NumberFormatException e){
-                JOptionPane.showMessageDialog(this, "Digite um valor numérico.");
-            }
-        });
+        botaoSalvar.addActionListener(evt -> salvarMedicao());
         botaoSalvar.setBounds(30, 175, 110, 30);
         painelDados.add(botaoSalvar);
 
         botaoConsultar.setText("Consultar");
-        botaoConsultar.addActionListener(evt -> {
-            if(comboSensor.getSelectedItem() == null){
-                textoResultado.setText("Selecione um sensor válido para a medição");
-            }else{
-                String codigoSensor = comboSensor.getSelectedItem().toString();
-                mostrarMedicoes(codigoSensor);
-            }
-        });
+        botaoConsultar.addActionListener(evt -> consultarMedicao());
         botaoConsultar.setBounds(155, 175, 110, 30);
         painelDados.add(botaoConsultar);
 
@@ -167,18 +146,59 @@ public class JanelaMedicao extends JFrame {
         botaoAtualizarSensores.setBounds(405, 175, 125, 30);
         painelDados.add(botaoAtualizarSensores);
 
-        textoResultado.setColumns(20);
-        textoResultado.setRows(5);
-        textoResultado.setEditable(false);
-        textoResultado.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        tabelaMedicoes.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tabelaMedicoes.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                preencherCamposPelaTabela();
+            }
+        });
 
-        scrollResultado = new JScrollPane(textoResultado);
-        scrollResultado.setBounds(20, 30, 520, 140);
-        painelResultado.add(scrollResultado);
+        scrollTabela = new JScrollPane(tabelaMedicoes);
+        scrollTabela.setBounds(20, 30, 640, 160);
+        painelResultado.add(scrollTabela);
 
-        setSize(620, 540);
+        setSize(740, 560);
         setLocationRelativeTo(null);
         carregarSensores();
+    }
+
+    private void salvarMedicao(){
+        Sensor sensor = (Sensor) comboSensor.getSelectedItem();
+
+        if(sensor == null){
+            JOptionPane.showMessageDialog(this, "Selecione um sensor válido para a medição.");
+            return;
+        }
+
+        try{
+            String unidade = textoUnidade.getText().trim();
+            String dataHora = textoDataHora.getText().trim();
+            double valor = Double.parseDouble(textoValor.getText().replace(",", "."));
+
+            if(unidade.isEmpty() || dataHora.isEmpty()){
+                JOptionPane.showMessageDialog(this, "Preencha todos os campos.");
+                return;
+            }
+
+            String mensagem = controller.cadastrarMedicao(sensor, valor, unidade, dataHora);
+            JOptionPane.showMessageDialog(this, mensagem);
+            mostrarMedicoes(sensor);
+        }catch(NumberFormatException e){
+            JOptionPane.showMessageDialog(this, "Digite um valor numérico.");
+        }
+    }
+
+    private void consultarMedicao(){
+        Sensor sensor = (Sensor) comboSensor.getSelectedItem();
+
+        if(sensor == null){
+            JOptionPane.showMessageDialog(this, "Selecione um sensor válido para a medição.");
+            limparTabela();
+            return;
+        }
+
+        mostrarMedicoes(sensor);
     }
 
     private void carregarSensores(){
@@ -186,27 +206,43 @@ public class JanelaMedicao extends JFrame {
         comboSensor.removeAllItems();
 
         for(Sensor sensor : sensores){
-            comboSensor.addItem(sensor.getCodigo());
+            comboSensor.addItem(sensor);
+        }
+
+        limparTabela();
+    }
+
+    private void mostrarMedicoes(Sensor sensor){
+        ArrayList<Medicao> medicoes = controller.consultarMedicao(sensor);
+        limparTabela();
+
+        for(Medicao medicao : medicoes){
+            adicionarMedicaoNaTabela(medicao);
         }
     }
 
-    private void mostrarMedicoes(String codigoSensor){
-        ArrayList<Medicao> medicoes = controller.consultarMedicao(codigoSensor);
-        String texto = "";
+    private void adicionarMedicaoNaTabela(Medicao medicao){
+        modeloTabelaMedicoes.addRow(new Object[]{
+                medicao.getId(),
+                medicao.getValor(),
+                medicao.getUnidade(),
+                medicao.getDataHora(),
+                medicao.getSensor().getCodigo()
+        });
+    }
 
-        if(medicoes.isEmpty()){
-            texto = "Nenhuma medição cadastrada.";
-        }else{
-            for(Medicao medicao : medicoes){
-                texto += "ID: " + medicao.getId() +
-                        " | Valor: " + medicao.getValor() +
-                        " | Unidade: " + medicao.getUnidade() +
-                        " | Data/Hora: " + medicao.getDataHora() +
-                        " | Sensor: " + medicao.getSensor().getCodigo() + "\n";
-            }
+    private void limparTabela(){
+        modeloTabelaMedicoes.setRowCount(0);
+    }
+
+    private void preencherCamposPelaTabela(){
+        int linha = tabelaMedicoes.getSelectedRow();
+        if(linha >= 0){
+            textoId.setText(modeloTabelaMedicoes.getValueAt(linha, 0).toString());
+            textoValor.setText(modeloTabelaMedicoes.getValueAt(linha, 1).toString());
+            textoUnidade.setText(modeloTabelaMedicoes.getValueAt(linha, 2).toString());
+            textoDataHora.setText(modeloTabelaMedicoes.getValueAt(linha, 3).toString());
         }
-
-        textoResultado.setText(texto);
     }
 
     private void limparCampos(){
@@ -214,6 +250,6 @@ public class JanelaMedicao extends JFrame {
         textoValor.setText("");
         textoUnidade.setText("");
         textoDataHora.setText("");
-        textoResultado.setText("");
+        limparTabela();
     }
 }

@@ -11,11 +11,9 @@ public class MedicaoController {
     private MedicaoDao dao = new MedicaoDao();
     private SensorDao sensorDao = new SensorDao();
 
-    public String cadastrarMedicao(String codigoSensor, double valor, String unidade, String dataHora){
-        Sensor sensor = sensorDao.consultarSensor(codigoSensor);
-
-        if(sensor == null){
-            return "Selecione um sensor válido para a medição";
+    public String cadastrarMedicao(Sensor sensor, double valor, String unidade, String dataHora){
+        if(sensor == null || sensor.getId() <= 0){
+            return "Selecione um sensor válido para a medição.";
         }
 
         Medicao medicao = new Medicao();
@@ -27,9 +25,12 @@ public class MedicaoController {
         return "Medição registrada com sucesso!";
     }
 
-    public ArrayList<Medicao> consultarMedicao(String codigoSensor){
+    public String cadastrarMedicao(String codigoSensor, double valor, String unidade, String dataHora){
         Sensor sensor = sensorDao.consultarSensor(codigoSensor);
+        return cadastrarMedicao(sensor, valor, unidade, dataHora);
+    }
 
+    public ArrayList<Medicao> consultarMedicao(Sensor sensor){
         if(sensor == null){
             return new ArrayList<>();
         }
@@ -37,4 +38,8 @@ public class MedicaoController {
         return dao.consultarMedicao(sensor);
     }
 
+    public ArrayList<Medicao> consultarMedicao(String codigoSensor){
+        Sensor sensor = sensorDao.consultarSensor(codigoSensor);
+        return consultarMedicao(sensor);
+    }
 }
